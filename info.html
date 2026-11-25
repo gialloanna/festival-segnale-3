@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Segnale — Festival di design</title>
+  <title>Segnale — Info e luoghi</title>
 
+  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@14.4.0/swiper-bundle.min.css">
 </head>
 
@@ -42,6 +41,11 @@
       </p>
     </section>
 
+    <section class="content-section" aria-labelledby="titolo-meteo">
+      <h2 id="titolo-meteo">Meteo a Torino adesso</h2>
+      <p id="meteo-torino" aria-live="polite">Caricamento del meteo…</p>
+    </section>
+
     <section class="content-section" aria-labelledby="titolo-galleria">
       <h2 id="titolo-galleria">Le sedi</h2>
 
@@ -49,27 +53,27 @@
         <div class="swiper-wrapper">
           <div class="swiper-slide">
             <figure>
-              <img src="assets/luoghi/sede-centrale.jpg" alt="Sede centrale">
+              <img src="assets/luoghi/sede-centrale.jpg" alt="Sede di Officina Nord">
               <figcaption>
-                <strong>Sede centrale</strong> — Corso Duca degli Abruzzi 24, Torino.
+                <strong>Officina Nord</strong> — Corso Duca degli Abruzzi 24, Torino.
               </figcaption>
             </figure>
           </div>
 
           <div class="swiper-slide">
             <figure>
-              <img src="assets/luoghi/politecnico-valentino.jpg" alt="Politecnico al Valentino">
+              <img src="assets/luoghi/politecnico-valentino.jpg" alt="Sede di Spazio Forma">
               <figcaption>
-                <strong>Politecnico al Valentino</strong> — Viale Mattioli 39, Torino.
+                <strong>Spazio Forma</strong> — Viale Mattioli 39, Torino.
               </figcaption>
             </figure>
           </div>
 
           <div class="swiper-slide">
             <figure>
-              <img src="assets/luoghi/mirafiori.jpg" alt="Sede di Mirafiori">
+              <img src="assets/luoghi/mirafiori.jpg" alt="Sede di Cortile Comune">
               <figcaption>
-                <strong>Sede di Mirafiori</strong> — Corso Luigi Settembrini 178, Torino.
+                <strong>Cortile Comune</strong> — Corso Luigi Settembrini 178, Torino.
               </figcaption>
             </figure>
           </div>
@@ -109,19 +113,19 @@
 
       <ul class="venues">
         <li>
-          <strong>Sede centrale</strong> — Corso Duca degli Abruzzi 24, Torino —
+          <strong>Officina Nord</strong> — Corso Duca degli Abruzzi 24, Torino —
           <a href="https://www.google.com/maps/search/?api=1&amp;query=Corso+Duca+degli+Abruzzi+24%2C+Torino">
             Indicazioni stradali
           </a>
         </li>
         <li>
-          <strong>Politecnico al Valentino</strong> — Viale Mattioli 39, Torino —
+          <strong>Spazio Forma</strong> — Viale Mattioli 39, Torino —
           <a href="https://www.google.com/maps/search/?api=1&amp;query=Viale+Mattioli+39%2C+Torino">
             Indicazioni stradali
           </a>
         </li>
         <li>
-          <strong>Sede di Mirafiori</strong> — Corso Luigi Settembrini 178, Torino —
+          <strong>Cortile Comune</strong> — Corso Luigi Settembrini 178, Torino —
           <a href="https://www.google.com/maps/search/?api=1&amp;query=Corso+Luigi+Settembrini+178%2C+Torino">
             Indicazioni stradali
           </a>
@@ -137,6 +141,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@14.4.0/swiper-bundle.min.js"></script>
+
   <script>
     new Swiper(".galleria-luoghi", {
       slidesPerView: 1,
@@ -145,6 +150,45 @@
         prevEl: ".swiper-button-prev"
       }
     });
+
+    const riquadroMeteo = document.querySelector("#meteo-torino");
+
+    async function caricaMeteo() {
+      const url =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=45.07&longitude=7.69" +
+        "&current=temperature_2m,relative_humidity_2m" +
+        "&timezone=Europe%2FRome";
+
+      try {
+        const risposta = await fetch(url);
+
+        if (!risposta.ok) {
+          throw new Error("Risposta dell'API non valida");
+        }
+
+        const dati = await risposta.json();
+        const condizioni = dati.current;
+
+        if (
+          !condizioni ||
+          typeof condizioni.temperature_2m !== "number" ||
+          typeof condizioni.relative_humidity_2m !== "number"
+        ) {
+          throw new Error("Dati meteo non disponibili");
+        }
+
+        riquadroMeteo.textContent =
+          `${condizioni.temperature_2m} °C · ` +
+          `Umidità ${condizioni.relative_humidity_2m}%`;
+      } catch (errore) {
+        console.error("Errore nel caricamento del meteo:", errore);
+        riquadroMeteo.textContent =
+          "Meteo temporaneamente non disponibile.";
+      }
+    }
+
+    caricaMeteo();
   </script>
 </body>
 </html>
