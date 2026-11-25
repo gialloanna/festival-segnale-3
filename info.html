@@ -42,8 +42,17 @@
     </section>
 
     <section class="content-section" aria-labelledby="titolo-meteo">
-      <h2 id="titolo-meteo">Meteo a Torino adesso</h2>
-      <p id="meteo-torino" aria-live="polite">Caricamento del meteo…</p>
+      <h2 id="titolo-meteo">Meteo attuale a Torino</h2>
+      <p id="meteo-torino" role="status" aria-live="polite">
+        Caricamento del meteo…
+      </p>
+      <p class="meteo-attribuzione">
+        Il widget mostra le condizioni meteo attuali, non previsioni per le
+        date del festival. Dati forniti da
+        <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>,
+        con licenza
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>.
+      </p>
     </section>
 
     <section class="content-section" aria-labelledby="titolo-galleria">
@@ -157,14 +166,14 @@
       const url =
         "https://api.open-meteo.com/v1/forecast" +
         "?latitude=45.07&longitude=7.69" +
-        "&current=temperature_2m,relative_humidity_2m" +
+        "&current=temperature_2m,wind_speed_10m" +
         "&timezone=Europe%2FRome";
 
       try {
         const risposta = await fetch(url);
 
         if (!risposta.ok) {
-          throw new Error("Risposta dell'API non valida");
+          throw new Error(`Risposta dell'API non valida: ${risposta.status}`);
         }
 
         const dati = await risposta.json();
@@ -173,14 +182,22 @@
         if (
           !condizioni ||
           typeof condizioni.temperature_2m !== "number" ||
-          typeof condizioni.relative_humidity_2m !== "number"
+          typeof condizioni.wind_speed_10m !== "number" ||
+          !condizioni.time
         ) {
-          throw new Error("Dati meteo non disponibili");
+          throw new Error("Dati meteo non disponibili o incompleti");
         }
 
+        const orario = new Intl.DateTimeFormat("it-IT", {
+          dateStyle: "short",
+          timeStyle: "short",
+          timeZone: "Europe/Rome"
+        }).format(new Date(condizioni.time));
+
         riquadroMeteo.textContent =
-          `${condizioni.temperature_2m} °C · ` +
-          `Umidità ${condizioni.relative_humidity_2m}%`;
+          `Temperatura: ${condizioni.temperature_2m} ${dati.current_units.temperature_2m} · ` +
+          `Vento: ${condizioni.wind_speed_10m} ${dati.current_units.wind_speed_10m} · ` +
+          `Dato aggiornato: ${orario}`;
       } catch (errore) {
         console.error("Errore nel caricamento del meteo:", errore);
         riquadroMeteo.textContent =
